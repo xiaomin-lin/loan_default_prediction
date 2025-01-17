@@ -101,15 +101,15 @@ def get_variable_types(df, excluded_cols=None):
     # Exclude specified columns from the DataFrame
     df_filtered = df.drop(columns=excluded_cols, errors="ignore")
 
-    numeric_cols = df_filtered.select_dtypes(
-        include=["int64", "float64"]
+    continuous_cols = df_filtered.select_dtypes(
+        include=["int64", "float64", "int32", "float32"]
     ).columns.tolist()
     categorical_cols = df_filtered.select_dtypes(
-        include=["object", "category"]
+        include=["object", "category", "string", "bool"]
     ).columns.tolist()
 
     return {
-        "numeric": numeric_cols,
+        "continuous": continuous_cols,
         "categorical": categorical_cols,
     }
 
@@ -142,10 +142,9 @@ def transform_data(df):
     """
     # Transforming the specified columns
     df["id"] = df["id"].astype(str)
-    df["member_id"] = df["member_id"].fillna(0).astype(int)
+    df["member_id"] = df["member_id"].astype(str)
     df["loan_amnt"] = df["loan_amnt"].astype(int)
     df["term"] = df["term"].astype(str)
-    # df['int_rate'] = df['int_rate'].astype(float)
     df["emp_length"] = df["emp_length"].astype(str)
 
     return df
@@ -162,8 +161,8 @@ def main():
 
     print(df.head())
 
-    # Check for duplicate member_ids
-    check_duplicate_member_ids(df)
+    # # Check for duplicate member_ids
+    # check_duplicate_member_ids(df)
 
     # Get basic information
     basic_info = get_basic_info(df)
@@ -191,11 +190,11 @@ def main():
         print(f"Class {label}: {count} ({percentage:.2f}%)")
 
     # Get variable types
-    var_types = get_variable_types(df)
+    var_types = get_variable_types(df, excluded_cols=["bad_flag"])
     print("\n=== Variable Types ===")
     print(
-        f"Numeric variables ({len(var_types['numeric'])}):",
-        ", ".join(var_types["numeric"]),
+        f"Continuous variables ({len(var_types['continuous'])}):",
+        ", ".join(var_types["continuous"]),
     )
     print(
         f"\nCategorical variables ({len(var_types['categorical'])}):",
