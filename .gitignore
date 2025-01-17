@@ -1,0 +1,11 @@
+# Gitinit file for the Loan Default Prediction Project
+# Owner: Xiaomin Lin
+# Created: 2025-01-17
+# Last Modified: 2025-01-17
+
+.venv/              # Python virtual environment directory
+__pycache__/        # Python cache directories
+*.pyc               # Python compiled files
+.env                # Environment variables file
+.DS_Store           # macOS system files
+data/               # data directory
