@@ -118,11 +118,11 @@ def impute_categorical_features(
     return processed_df, stats
 
 
-def handle_outliers(
+def handle_continuous_outliers(
     df: pd.DataFrame, var_types: Dict, threshold: float = 1.5
 ) -> Tuple[pd.DataFrame, Dict]:
     """
-    Identify outliers in continuous features
+    Identify outliers in continuous features based on the IQR method.
     Args:
         df: Input DataFrame
         var_types: Dictionary containing variable types from get_variable_types()
@@ -181,8 +181,8 @@ def clean_dataset(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict]:
     # df_clean, categorical_stats = impute_categorical_features(df_clean, var_types)
     # cleaning_stats["categorical_cleaning"] = categorical_stats
 
-    # 4. Handle outliers (identification only)
-    _, outlier_stats = handle_outliers(df_clean, var_types)
+    # 4. Handle continuous outliers
+    _, outlier_stats = handle_continuous_outliers(df_clean, var_types)
     cleaning_stats["outlier_analysis"] = outlier_stats
 
     cleaning_stats["final_shape"] = df_clean.shape
@@ -220,26 +220,13 @@ def main():
         f"({target_stats['removed_percentage']:.2f}%)"
     )
 
-    # Feature cleaning
-    print("\nImputed continuous features:")
-    for col, stats in (
-        cleaning_stats.get("numeric_cleaning", {}).get("imputed_columns", {}).items()
-    ):
-        print(f"- {col}: {stats['missing_count']} values imputed with median")
-
-    print("\nImputed categorical features:")
-    for col, stats in (
-        cleaning_stats.get("categorical_cleaning", {})
-        .get("imputed_columns", {})
-        .items()
-    ):
-        print(f"- {col}: {stats['missing_count']} values imputed with mode")
-
     # Outlier summary
     print("\nOutlier Analysis:")
     for col, stats in cleaning_stats["outlier_analysis"]["outliers"].items():
         if stats["count"] > 0:
-            print(f"- {col}: {stats['count']} outliers ({stats['percentage']:.2f}%)")
+            print(
+                f"- {col}: {stats['count']} continuous outliers ({stats['percentage']:.2f}%)"
+            )
 
 
 if __name__ == "__main__":
