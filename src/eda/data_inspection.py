@@ -146,6 +146,8 @@ def transform_data(df):
     df["loan_amnt"] = df["loan_amnt"].astype(int)
     df["term"] = df["term"].astype(str)
     df["emp_length"] = df["emp_length"].astype(str)
+    df['int_rate'] = df['int_rate'].str.replace('%', '').astype(float) / 100.0
+    df['revol_util'] = df['revol_util'].str.replace('%', '').astype(float) / 100.0
 
     return df
 
