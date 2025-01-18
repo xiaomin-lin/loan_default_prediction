@@ -177,9 +177,8 @@ def transform_data(
     if "loan_amnt" in columns_to_transform:
         df_transformed["loan_amnt"] = df_transformed["loan_amnt"].astype(int)
     if "term" in columns_to_transform:
-        df_transformed["term"] = df_transformed["term"].astype(str)
-    if "emp_length" in columns_to_transform:
-        df_transformed["emp_length"] = df_transformed["emp_length"].astype(str)
+        # Keep term as categorical - just clean the string format
+        df_transformed["term"] = df_transformed["term"].str.strip().astype("category")
     if "int_rate" in columns_to_transform:
         df_transformed["int_rate"] = (
             df_transformed["int_rate"].str.replace("%", "").astype(float) / 100.0
@@ -203,23 +202,35 @@ def transform_data(
             parse_emp_length
         )
 
+    # Convert 'bad_flag' to categorical with 0 and 1, retaining missing values
+    if "bad_flag" in columns_to_transform:
+        df_transformed["bad_flag"] = (
+            df_transformed["bad_flag"].map({1.0: 1, 0.0: 0}).astype("Int64")
+        )
+        df_transformed["bad_flag"] = df_transformed["bad_flag"].astype("category")
+
     return df_transformed
 
 
 def main():
     """Main function to run initial data inspection"""
-    # Define columns to exclude
-    excluded_cols = ["desc", "member_id", "id"]  # Add any columns you want to exclude
-    target_col = "bad_flag"
 
     # Load data
     print("Loading data and verifying columns...")
-    df, data_dict = load_data(excluded_cols=excluded_cols)
+    df, data_dict = load_data()
 
     # Transform the data
-    df = transform_data(df, excluded_cols=excluded_cols)
+    df = transform_data(df)
 
     print(df.head())
+
+    # Define columns to exclude
+    excluded_cols = [
+        "desc",
+        "member_id",
+        "id",
+    ]  # Add any columns you want to exclude
+    target_col = "bad_flag"
 
     # Get basic information
     basic_info = get_basic_info(df, excluded_cols=excluded_cols)

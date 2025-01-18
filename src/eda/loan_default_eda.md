@@ -127,3 +127,272 @@ Our preliminary inspection of the dataset as well as its quality shows that over
 5. **Redundancy**: The variable `application_approved_flag` is a redundant variable, as it has only one value, which is 1. Therefore, it can be removed from the dataset from the modeling perspective.
 
 6. **Potentiality**: The variable `desc` contains a lot of text data, which may be useful for the modeling process. However, it is also a very sparse variable, with only 117,117 non-null values out of 199,121 rows. Anyway, it worths some investigation of how to leverage it in the modeling process.
+
+## Data Exploratory Analysis
+
+This section aims to explore the dataset to uncover key patterns in the loan data. We conduct univariate analysis, variable importance analysis, and and their correlations with the target variable.
+
+### Univariate Analysis
+
+All results can be found in the [Appendix/Univariate Analysis](#appendix-univariate-analysis) section. Our findings are as follows:
+
+1. **Annual Income**
+
+   - Loan amounts exhibit a multi-modal distribution with major peaks at $10,000, $15,000, and $20,000, suggesting standardized loan products
+   - Interest rates range from 6% to 26%, with a right-skewed distribution centered around 13%
+   - 36-month terms are significantly more popular than 60-month terms
+   - Debt consolidation is the dominant loan purpose, followed by credit card refinancing
+
+2. **Income and Debt Profiles**:
+
+   - Annual incomes show extreme right skew, with median around $65,000 and outliers up to $7M
+   - DTI ratios concentrate between 10-25%, with higher ratios showing increased default risk
+   - Total current balance and credit limits show large variations, indicating diverse borrower profiles
+   - Higher income borrowers tend to have lower default rates
+
+3. **Credit Utilization Patterns**:
+
+   - Both revolving and bankcard utilization show bimodal distributions
+   - Many borrowers cluster around either low (<20%) or high (>80%) utilization
+   - About 30% of borrowers have at least one bankcard above 75% utilization
+   - Higher utilization rates strongly correlate with increased default probability
+
+4. **Credit History Indicators**:
+
+   - Recent inquiries are typically low (0-2), with each additional inquiry associated with higher default risk
+   - Employment length shows U-shaped distribution, peaking at both extremes (1 and 10+ years)
+   - Major derogatory marks are rare but highly predictive of default risk
+   - Internal credit scores show normal distribution, strongly correlating with default probability
+
+5. **Borrower Demographics**:
+   - Home ownership is dominated by mortgages (50%) and rentals (40%)
+   - Mortgage holders show lower default rates compared to renters
+   - Property owners (both mortgage and outright) tend to have higher loan amounts
+   - Rental status correlates with higher interest rates and default risk
+
+### Variable Importance Analysis
+
+#### Methodology: Information Value (IV) and Weight of Evidence (WOE)
+
+We employed Information Value (IV) and Weight of Evidence (WOE) analysis to assess feature importance. This methodology is widely adopted in credit risk modeling [References: Anderson, R. (2007). The Credit Scoring Toolkit; Siddiqi, N. (2006). Credit Risk Scorecards.] for several key reasons:
+
+1. **Universal Applicability**: Works effectively for both continuous and categorical variables without requiring transformation or encoding
+2. **Interpretability**: Provides clear, interpretable measures of predictive power
+3. **Non-linear Relationships**: Captures non-linear relationships between features and the target variable
+4. **Industry Standard**: Recognized as a standard approach in credit scoring and risk assessment
+
+Typically, IV values are interpreted as:
+
+- < 0.02: Unpredictive
+- 0.02 to 0.1: Weak
+- 0.1 to 0.3: Medium
+- \> 0.3: Strong
+
+#### Findings
+
+The Information Value analysis revealed several key insights about feature importance:
+
+1. **Strong Predictors** (IV > 0.3):
+
+   - `internal_score`: Highest predictive power (IV = 0.42), confirming its value as a third-party risk assessment
+   - `int_rate`: Second strongest predictor (IV = 0.35), indicating interest rates effectively price risk
+
+2. **Medium Predictors** (0.1 < IV < 0.3):
+
+   - Credit utilization metrics (`revol_util`, `bc_util`)
+   - Debt burden indicators (`dti`, `total_bc_limit`)
+   - Account history (`mths_since_last_major_derog`)
+
+3. **Weak Predictors** (0.02 < IV < 0.1):
+
+   - Demographic variables (`home_ownership`, `emp_length`)
+   - Loan characteristics (`term`, `loan_amnt`)
+   - Recent credit activity (`inq_last_6mths`)
+
+4. **Unpredictive Features** (IV < 0.02):
+   - `desc` (loan description)
+   - `member_id`
+   - `id`
+
+These findings align with credit risk management principles, where behavioral and performance metrics typically outperform demographic and application data in predicting default risk.
+
+### Correlation Heatmap
+
+The correlation heatmap reveals several important relationships between continuous variables, the result of which can be found in the [Appendix/Correlation Heatmap](#appendix-correlation-heatmap) section.
+
+- **Credit Capacity Metrics**: Strong positive correlations (>0.8) exist between total credit limits, bankcard limits, and current balances, suggesting consistent credit utilization patterns across different credit types
+- **Risk Indicators**: Internal score shows strong negative correlations with interest rate (-0.7) and moderate negative correlations with DTI (-0.4) and utilization metrics (-0.5), confirming its value as a risk predictor
+- **Utilization Metrics**: Revolving utilization and bankcard utilization show moderate correlation (0.6), indicating some borrowers maintain similar utilization levels across credit types
+- **Income Relationships**: Annual income shows weak to moderate positive correlations with credit limits (0.3-0.4) and weak negative correlations with utilization metrics (-0.2), suggesting higher income borrowers maintain lower utilization
+- **Default Risk Factors**: The target variable (bad_flag) shows strongest correlations with internal score (-0.3), interest rate (0.25), and utilization metrics (0.2), highlighting key risk factors
+
+### Feature Correlation Analysis
+
+The feature correlation analysis reveals several important relationships between continuous variables, the result of which can be found in the [Appendix/Feature Correlation Analysis](#appendix-feature-correlation-analysis) section.
+
+## Appendix
+
+### Univariate Analysis
+
+#### Continuous Variables
+
+**Annual Income** (The annual income provided by the borrower during application)
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/annual_inc_distribution.png" width="32%">
+    <img src="../../reports/eda/plots/annual_inc_boxplot.png" width="32%">
+    <img src="../../reports/eda/plots/annual_inc_vs_bad_flag_boxplot.png" width="32%">
+</div>
+
+**Bankcard Utilization** (Ratio of total current balance to high credit/credit limit)
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/bc_util_distribution.png" width="32%">
+    <img src="../../reports/eda/plots/bc_util_boxplot.png" width="32%">
+    <img src="../../reports/eda/plots/bc_util_vs_bad_flag_boxplot.png" width="32%">
+</div>
+
+**DTI** (Debt-to-Income ratio)
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/dti_distribution.png" width="32%">
+    <img src="../../reports/eda/plots/dti_boxplot.png" width="32%">
+    <img src="../../reports/eda/plots/dti_vs_bad_flag_boxplot.png" width="32%">
+</div>
+
+**Employment Length** (Employment length in years)
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/emp_length_distribution.png" width="32%">
+    <img src="../../reports/eda/plots/emp_length_boxplot.png" width="32%">
+    <img src="../../reports/eda/plots/emp_length_vs_bad_flag_boxplot.png" width="32%">
+</div>
+
+**Recent Inquiries** (Number of inquiries in last 6 months)
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/inq_last_6mths_distribution.png" width="32%">
+    <img src="../../reports/eda/plots/inq_last_6mths_boxplot.png" width="32%">
+    <img src="../../reports/eda/plots/inq_last_6mths_vs_bad_flag_boxplot.png" width="32%">
+</div>
+
+**Interest Rate** (Interest Rate on the loan)
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/int_rate_distribution.png" width="32%">
+    <img src="../../reports/eda/plots/int_rate_boxplot.png" width="32%">
+    <img src="../../reports/eda/plots/int_rate_vs_bad_flag_boxplot.png" width="32%">
+</div>
+
+**Loan Amount** (The listed amount of the loan applied for)
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/loan_amnt_distribution.png" width="32%">
+    <img src="../../reports/eda/plots/loan_amnt_boxplot.png" width="32%">
+    <img src="../../reports/eda/plots/loan_amnt_vs_bad_flag_boxplot.png" width="32%">
+</div>
+
+**Months Since Last Major Derogatory**
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/mths_since_last_major_derog_distribution.png" width="32%">
+    <img src="../../reports/eda/plots/mths_since_last_major_derog_boxplot.png" width="32%">
+    <img src="../../reports/eda/plots/mths_since_last_major_derog_vs_bad_flag_boxplot.png" width="32%">
+</div>
+
+**Months Since Recent Inquiry**
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/mths_since_recent_inq_distribution.png" width="32%">
+    <img src="../../reports/eda/plots/mths_since_recent_inq_boxplot.png" width="32%">
+    <img src="../../reports/eda/plots/mths_since_recent_inq_vs_bad_flag_boxplot.png" width="32%">
+</div>
+
+**Percent Bankcard > 75%** (Percentage of all bankcard accounts > 75% of limit)
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/percent_bc_gt_75_distribution.png" width="32%">
+    <img src="../../reports/eda/plots/percent_bc_gt_75_boxplot.png" width="32%">
+    <img src="../../reports/eda/plots/percent_bc_gt_75_vs_bad_flag_boxplot.png" width="32%">
+</div>
+
+**Revolving Utilization** (Revolving line utilization rate)
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/revol_util_distribution.png" width="32%">
+    <img src="../../reports/eda/plots/revol_util_boxplot.png" width="32%">
+    <img src="../../reports/eda/plots/revol_util_vs_bad_flag_boxplot.png" width="32%">
+</div>
+
+**Total Current Balance** (Total current balance of all accounts)
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/tot_cur_bal_distribution.png" width="32%">
+    <img src="../../reports/eda/plots/tot_cur_bal_boxplot.png" width="32%">
+    <img src="../../reports/eda/plots/tot_cur_bal_vs_bad_flag_boxplot.png" width="32%">
+</div>
+
+**Total High Credit Limit**
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/tot_hi_cred_lim_distribution.png" width="32%">
+    <img src="../../reports/eda/plots/tot_hi_cred_lim_boxplot.png" width="32%">
+    <img src="../../reports/eda/plots/tot_hi_cred_lim_vs_bad_flag_boxplot.png" width="32%">
+</div>
+
+**Total Bankcard Limit**
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/total_bc_limit_distribution.png" width="32%">
+    <img src="../../reports/eda/plots/total_bc_limit_boxplot.png" width="32%">
+    <img src="../../reports/eda/plots/total_bc_limit_vs_bad_flag_boxplot.png" width="32%">
+</div>
+
+**Internal Score** (Third party vendor's risk score)
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/internal_score_distribution.png" width="32%">
+    <img src="../../reports/eda/plots/internal_score_boxplot.png" width="32%">
+    <img src="../../reports/eda/plots/internal_score_vs_bad_flag_boxplot.png" width="32%">
+</div>
+
+#### Categorical Variables
+
+**Home Ownership**
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/home_ownership_countplot.png" width="48%">
+    <img src="../../reports/eda/plots/home_ownership_distribution_by_bad_flag_countplot.png" width="48%">
+</div>
+
+**Loan Purpose**
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/purpose_countplot.png" width="48%">
+    <img src="../../reports/eda/plots/purpose_distribution_by_bad_flag_countplot.png" width="48%">
+</div>
+
+**Term**
+
+<div style="display: flex; justify-content: space-between;">
+    <img src="../../reports/eda/plots/term_countplot.png" width="48%">
+    <img src="../../reports/eda/plots/term_distribution_by_bad_flag_countplot.png" width="48%">
+</div>
+
+### Correlation Heatmap
+
+<div style="display: flex; justify-content: center;">
+    <img src="../../reports/eda/plots/correlation_heatmap.png" width="100%">
+</div>
+
+### Variable Importance Analysis
+
+<div style="display: flex; justify-content: center;">
+    <img src="../../reports/eda/plots/feature_importance_iv.png" width="100%">
+</div>
+
+### Feature Correlation Analysis
+
+<div style="display: flex; justify-content: center;">
+    <img src="../../reports/eda/plots/feature_correlations.png" width="100%">
+</div>

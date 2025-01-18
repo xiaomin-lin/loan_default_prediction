@@ -333,20 +333,22 @@ def clean_dataset(
 
 def main():
     """Main function to run data quality checks and cleaning"""
+
+    # Load data using data_inspection functionality
+    print("Loading data...")
+    df, data_dict = load_data()
+
+    # Transform data using transform_data functionality
+    print("Transforming data...")
+    df_transformed = transform_data(df)
+
+    # Get initial target variable analysis
+    target_stats = analyze_target_variable(df_transformed)
+
     # Define columns to exclude and target column
     excluded_cols = ["desc", "member_id", "id"]
     target_col = "bad_flag"
 
-    # Load data using data_inspection functionality
-    print("Loading data...")
-    df, data_dict = load_data(excluded_cols=excluded_cols)
-
-    # Transform data using transform_data functionality
-    print("Transforming data...")
-    df_transformed = transform_data(df, excluded_cols=excluded_cols)
-
-    # Get initial target variable analysis
-    target_stats = analyze_target_variable(df_transformed, target_col=target_col)
     print("\n=== Initial Target Variable Analysis ===")
     print("Class distribution before cleaning:")
     for label, count in target_stats["distribution"].items():
