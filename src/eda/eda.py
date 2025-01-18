@@ -1,7 +1,7 @@
 """
 Exploratory Data Analysis (EDA) script for loan default prediction project.
-Author: [Your Name]
-Date: 2025-01-19
+Author: Xiaomin Lin
+Date: 2025-01-18
 """
 
 from pathlib import Path
