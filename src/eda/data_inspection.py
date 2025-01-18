@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 
-from utils.data_utils import (
+from src.utils.data_utils import (
     analyze_target_variable,
     get_basic_info,
     get_variable_types,
