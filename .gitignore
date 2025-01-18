@@ -6,6 +6,8 @@
 .venv/              # Python virtual environment directory
 __pycache__/        # Python cache directories
 *.pyc               # Python compiled files
+*.pyo               # Python optimized files
+*.pyd               # Python dynamic link libraries
 .env                # Environment variables file
 .DS_Store           # macOS system files
 data/               # data directory
