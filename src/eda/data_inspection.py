@@ -6,13 +6,16 @@ Date: 2025-01-17
 
 import json
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 
 
-def load_data():
+def load_data(excluded_cols: Optional[List[str]] = None) -> Tuple[pd.DataFrame, Dict]:
     """
     Load training data and data dictionary
+    Args:
+        excluded_cols: List of columns to exclude from loading (default: None)
     Returns:
         tuple: (DataFrame, dict) containing training data and data dictionary
     """
@@ -25,18 +28,22 @@ def load_data():
     # Drop any columns that are completely empty or unnamed
     df = df.loc[:, ~df.columns.str.contains("^Unnamed")]
 
+    # Drop excluded columns if specified
+    if excluded_cols:
+        df = df.drop(columns=excluded_cols, errors="ignore")
+
     # Load data dictionary
     with open(root_dir / "data/dict_data.json", "r") as f:
         data_dict = json.load(f)
 
     # Verify columns match data dictionary
     dict_cols = set(data_dict["dictionary"].keys())
+    if excluded_cols:
+        dict_cols = dict_cols - set(excluded_cols)
     df_cols = set(df.columns)
 
     print("\n=== Column Verification ===")
-    print(
-        f"Dataset shape: {df.shape}"
-    )  # Should show correct number of rows and 23 columns
+    print(f"Dataset shape: {df.shape}")
     print(f"Number of columns in data dictionary: {len(dict_cols)}")
     print(f"Number of columns in dataset: {len(df_cols)}")
 
@@ -51,14 +58,18 @@ def load_data():
     return df, data_dict
 
 
-def get_basic_info(df):
+def get_basic_info(df: pd.DataFrame, excluded_cols: Optional[List[str]] = None) -> Dict:
     """
     Get basic information about the dataset
     Args:
         df: pandas DataFrame
+        excluded_cols: List of columns to exclude from analysis (default: None)
     Returns:
         dict: Basic dataset information
     """
+    if excluded_cols:
+        df = df.drop(columns=excluded_cols, errors="ignore")
+
     info = {
         "shape": df.shape,
         "columns": df.columns.tolist(),
@@ -68,25 +79,28 @@ def get_basic_info(df):
     return info
 
 
-def analyze_target_variable(df):
+def analyze_target_variable(df: pd.DataFrame, target_col: str = "bad_flag") -> Dict:
     """
-    Analyze the target variable (bad_flag)
+    Analyze the target variable
     Args:
         df: pandas DataFrame
+        target_col: Name of target column (default: "bad_flag")
     Returns:
         dict: Target variable statistics
     """
     target_stats = {
-        "distribution": df["bad_flag"].value_counts().to_dict(),
-        "distribution_percentage": df["bad_flag"]
+        "distribution": df[target_col].value_counts().to_dict(),
+        "distribution_percentage": df[target_col]
         .value_counts(normalize=True)
         .to_dict(),
-        "null_count": df["bad_flag"].isnull().sum(),
+        "null_count": df[target_col].isnull().sum(),
     }
     return target_stats
 
 
-def get_variable_types(df, excluded_cols=None):
+def get_variable_types(
+    df: pd.DataFrame, excluded_cols: Optional[List[str]] = None
+) -> Dict[str, List[str]]:
     """
     Categorize variables by their types, excluding specified columns
     Args:
@@ -102,10 +116,10 @@ def get_variable_types(df, excluded_cols=None):
     df_filtered = df.drop(columns=excluded_cols, errors="ignore")
 
     continuous_cols = df_filtered.select_dtypes(
-        include=["int64", "float64", "int32", "float32"]
+        include=["Int64", "Float64", "Int32", "Float32"]
     ).columns.tolist()
     categorical_cols = df_filtered.select_dtypes(
-        include=["object", "category", "string", "bool"]
+        include=["object", "category", "string", "bool", "boolean"]
     ).columns.tolist()
 
     return {
@@ -114,46 +128,93 @@ def get_variable_types(df, excluded_cols=None):
     }
 
 
-def check_duplicate_member_ids(df):
+def check_duplicate_member_ids(
+    df: pd.DataFrame, member_id_col: str = "member_id"
+) -> None:
     """
     Check for duplicate member_ids in the dataset
     Args:
         df: pandas DataFrame
+        member_id_col: Name of member ID column (default: "member_id")
     Returns:
         None
     """
-    duplicate_members = df[df.duplicated(subset="member_id", keep=False)]
+    duplicate_members = df[df.duplicated(subset=member_id_col, keep=False)]
 
     if not duplicate_members.empty:
         print("\n=== Duplicate Member IDs ===")
-        print(duplicate_members[["member_id"]].drop_duplicates())
-        print(f"Total duplicate member_ids: {duplicate_members['member_id'].nunique()}")
+        print(duplicate_members[[member_id_col]].drop_duplicates())
+        print(
+            f"Total duplicate {member_id_col}s: {duplicate_members[member_id_col].nunique()}"
+        )
     else:
-        print("\nNo duplicate member_ids found.")
+        print(f"\nNo duplicate {member_id_col}s found.")
 
 
-def transform_data(df):
+def transform_data(
+    df: pd.DataFrame, excluded_cols: Optional[List[str]] = None
+) -> pd.DataFrame:
     """
     Transform specified columns in the DataFrame to the desired data types.
     Args:
         df: pandas DataFrame
+        excluded_cols: List of columns to exclude from transformation (default: None)
     Returns:
         pandas DataFrame: Transformed DataFrame
     """
-    # Transforming the specified columns
-    df["id"] = df["id"].astype(str)
-    df["member_id"] = df["member_id"].astype(str)
-    df["loan_amnt"] = df["loan_amnt"].astype(int)
-    df["term"] = df["term"].astype(str)
-    df["emp_length"] = df["emp_length"].astype(str)
-    df['int_rate'] = df['int_rate'].str.replace('%', '').astype(float) / 100.0
-    df['revol_util'] = df['revol_util'].str.replace('%', '').astype(float) / 100.0
+    df_transformed = df.copy()
 
-    return df
+    if excluded_cols:
+        columns_to_transform = set(df.columns) - set(excluded_cols)
+    else:
+        columns_to_transform = set(df.columns)
+
+    # Transforming the specified columns if they exist in columns_to_transform
+    if "id" in columns_to_transform:
+        df_transformed["id"] = df_transformed["id"].astype(str)
+    if "member_id" in columns_to_transform:
+        df_transformed["member_id"] = df_transformed["member_id"].astype(str)
+    if "loan_amnt" in columns_to_transform:
+        df_transformed["loan_amnt"] = df_transformed["loan_amnt"].astype(int)
+    if "term" in columns_to_transform:
+        # Keep term as categorical - just clean the string format
+        df_transformed["term"] = df_transformed["term"].str.strip().astype("category")
+    if "int_rate" in columns_to_transform:
+        df_transformed["int_rate"] = (
+            df_transformed["int_rate"].str.replace("%", "").astype(float) / 100.0
+        )
+    if "revol_util" in columns_to_transform:
+        df_transformed["revol_util"] = (
+            df_transformed["revol_util"].str.replace("%", "").astype(float) / 100.0
+        )
+
+    # Transform 'emp_length' from string to integer if it exists
+    if "emp_length" in columns_to_transform:
+
+        def parse_emp_length(emp_str):
+            if pd.isnull(emp_str):
+                return None
+            # Extract the numeric part
+            num = "".join(filter(str.isdigit, emp_str))
+            return int(num) if num else None
+
+        df_transformed["emp_length"] = df_transformed["emp_length"].apply(
+            parse_emp_length
+        )
+
+    # Convert 'bad_flag' to categorical with 0 and 1, retaining missing values
+    if "bad_flag" in columns_to_transform:
+        df_transformed["bad_flag"] = (
+            df_transformed["bad_flag"].map({1.0: 1, 0.0: 0}).astype("Int64")
+        )
+        df_transformed["bad_flag"] = df_transformed["bad_flag"].astype("category")
+
+    return df_transformed
 
 
 def main():
     """Main function to run initial data inspection"""
+
     # Load data
     print("Loading data and verifying columns...")
     df, data_dict = load_data()
@@ -163,11 +224,16 @@ def main():
 
     print(df.head())
 
-    # # Check for duplicate member_ids
-    # check_duplicate_member_ids(df)
+    # Define columns to exclude
+    excluded_cols = [
+        "desc",
+        "member_id",
+        "id",
+    ]  # Add any columns you want to exclude
+    target_col = "bad_flag"
 
     # Get basic information
-    basic_info = get_basic_info(df)
+    basic_info = get_basic_info(df, excluded_cols=excluded_cols)
     print("\n=== Basic Dataset Information ===")
     print(f"Dataset shape: {basic_info['shape']}")
 
@@ -184,7 +250,7 @@ def main():
             print(f"{col}: {count} ({percentage:.2f}%)")
 
     # Analyze target variable
-    target_stats = analyze_target_variable(df)
+    target_stats = analyze_target_variable(df, target_col=target_col)
     print("\n=== Target Variable Analysis ===")
     print("Class distribution:")
     for label, count in target_stats["distribution"].items():
@@ -192,7 +258,7 @@ def main():
         print(f"Class {label}: {count} ({percentage:.2f}%)")
 
     # Get variable types
-    var_types = get_variable_types(df, excluded_cols=["bad_flag"])
+    var_types = get_variable_types(df, excluded_cols=excluded_cols)
     print("\n=== Variable Types ===")
     print(
         f"Continuous variables ({len(var_types['continuous'])}):",
