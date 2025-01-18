@@ -14,7 +14,7 @@
 3. [Data Exploratory Analysis](#data-exploratory-analysis)
    - [Univariate Analysis](#univariate-analysis)
    - [Variable Importance Analysis](#variable-importance-analysis)
-   - [Correlation Analysis](#correlation-analysis)
+   - [Inter-predictor Correlation Analysis](#inter-predictor-correlation-analysis)
    - [Feature Correlations with Target](#feature-correlations-with-target)
 4. [Appendix](#appendix)
    - [Univariate Analysis Plots](#univariate-analysis-plots)
@@ -24,7 +24,11 @@
 
 ## Introduction
 
-This report summarizes the exploratory data analysis conducted on the loan default prediction dataset. The goal is to understand the dataset's structure, identify key variables, and analyze the target variable, `bad_flag`, which indicates whether a loan is considered "bad."
+This report presents a comprehensive exploratory data analysis (EDA) of a loan default prediction dataset. In the context of consumer lending, understanding and predicting loan defaults is crucial for risk management and portfolio optimization. Through this analysis, we aim to uncover the underlying patterns, relationships, and key predictors that influence loan default probability.
+
+Our investigation follows a structured approach, beginning with rigorous data quality assessment and preliminary transformations. We then delve into detailed analyses of variable distributions, outlier patterns, and missing value mechanisms. Particular attention is paid to the target variable, `bad_flag`, which indicates loan default status, and its relationships with various predictors through correlation and information value analyses.
+
+The insights derived from this exploration will serve multiple purposes: guiding feature engineering decisions, informing modeling choices, and establishing baseline expectations for predictive performance. By understanding the nuances of our dataset, we lay the foundation for developing a robust and interpretable loan default prediction model that can effectively distinguish between high and low-risk borrowers.
 
 ## Data Inspection and Quality Control
 
@@ -72,7 +76,7 @@ These transformations ensure that:
 
 ### Outlier Analysis
 
-The dataset contains several variables with notable outliers. We used the Interquartile Range (IQR) method [Tukey, 1977] to identify outliers in continuous variables. This method defines outliers as values that fall outside the range:
+The dataset contains several variables with notable outliers. We used the Interquartile Range (IQR) method [Tukey, J. W. (1977). Exploratory Data Analysis.] to identify outliers in continuous variables. This method defines outliers as values that fall outside the range:
 
 - Lower bound: Q1 - 1.5 × IQR
 - Upper bound: Q3 + 1.5 × IQR
@@ -93,8 +97,6 @@ Key findings from outlier analysis:
    - `mths_since_last_major_derog`: 43 outliers (0.02%)
 
 For categorical variables, while rare categories could be considered outliers, this approach was not applied as it may not be meaningful for this lending context where rare categories (e.g., specific loan purposes) could still be valid and important predictors.
-
-_Reference: Tukey, J. W. (1977). Exploratory Data Analysis. Addison-Wesley._
 
 ### Data Profile
 
@@ -194,7 +196,7 @@ All results can be found in [Appendix/Univariate Analysis Plots](#univariate-ana
 
 ### Variable Importance Analysis
 
-We employed Information Value (IV) and Weight of Evidence (WOE) analysis to assess feature importance. This methodology is widely adopted in credit risk modeling [References: Anderson, R. (2007). The Credit Scoring Toolkit; Siddiqi, N. (2006). Credit Risk Scorecards.] for several key reasons:
+We employed Information Value (IV) and Weight of Evidence (WOE) analysis to assess feature importance. This methodology is widely adopted in credit risk modeling [Anderson, R. (2007). The Credit Scoring Toolkit; Siddiqi, N. (2006). Credit Risk Scorecards.] for several key reasons:
 
 1. **Universal Applicability**: Works effectively for both continuous and categorical variables without requiring transformation or encoding
 2. **Interpretability**: Provides clear, interpretable measures of predictive power
@@ -227,9 +229,9 @@ The Information Value (IV) analysis in [Appendix/Variable Importance Plot](#vari
 
 This analysis suggests that loan amount and pricing factors are the strongest predictors of default risk, while employment and credit history metrics show lower predictive power.
 
-### Correlation Analysis
+### Inter-predictor Correlation Analysis
 
-The correlation analysis in [Appendix/Correlation Heatmap](#correlation-heatmap) reveals several important relationships between continuous variables, as follows:
+The inter-predictor correlation analysis in [Appendix/Correlation Heatmap](#correlation-heatmap) reveals several important relationships between continuous variables, as follows:
 
 - **Credit Capacity Metrics**: Strong positive correlations (>0.8) exist between total credit limits, bankcard limits, and current balances, suggesting consistent credit utilization patterns across different credit types
 - **Risk Indicators**: Internal score shows strong negative correlations with interest rate (-0.7) and moderate negative correlations with DTI (-0.4) and utilization metrics (-0.5), confirming its value as a risk predictor
@@ -247,6 +249,20 @@ The feature correlations with target in [Appendix/Feature Correlations Plot](#fe
 - **Negative Correlations**: Financial capacity indicators (`mths_since_recent_inq`, `total_bc_limit`, `tot_hi_cred_lim`, `annual_inc`) show weak negative correlations (-0.05-0), suggesting higher financial capacity is associated with lower default risk
 
 Overall, these correlation results do not suggest any strong relationships between the features and the target variable.
+
+## Conclusions
+
+In this exploratory data analysis (EDA), we systematically examined the loan default dataset to uncover key insights and relationships among variables. We performed data quality checks, outlier analysis, and assessed feature importance using Information Value (IV) and Weight of Evidence (WOE) methodologies. Additionally, we analyzed inter-predictor correlations and their relationships with the target variable, `bad_flag`.
+
+### Major Findings:
+
+1. **Data Quality**: This dataset is of good amount and good quality in general. Although missingness, outliers, redundancy, and label imbalance are present, they are not severe enough to affect the predictive model's performance given proper data preprocessing and feature engineering.
+2. **Feature Importance**: The loan amount and interest rate emerged as the strongest predictors of default risk, while internal scores and credit utilization metrics also demonstrated significant correlations.
+3. **Correlation Insights**: Strong positive correlations were identified among credit capacity metrics, indicating consistent utilization patterns, while risk indicators highlighted the importance of pricing and recent credit behavior.
+
+### Next Steps:
+
+The insights gained from this EDA will inform our feature engineering process, allowing us to prioritize the most impactful variables for predictive modeling. Understanding the relationships between features and the target variable will guide the selection of appropriate modeling techniques and enhance the robustness of our predictive models. By leveraging these findings, we aim to build a more accurate and interpretable model for predicting loan defaults.
 
 ## Appendix
 
