@@ -10,6 +10,8 @@
    - [Outlier Analysis](#outlier-analysis)
    - [Data Profile](#data-profile)
    - [Target Variable Analysis](#target-variable-analysis)
+   - [Redundancy Analysis](#redundancy-analysis)
+   - [Data Duplication Analysis](#data-duplication-analysis)
    - [Findings](#findings)
 3. [Data Exploratory Analysis](#data-exploratory-analysis)
    - [Univariate Analysis](#univariate-analysis)
@@ -40,6 +42,8 @@ The dataset was loaded from the following files:
 - **Data Dictionary**: `data/dict_data.json`
 
 ### Column Verification
+
+This step is beneficial for quality checking as it verifies whether the given dataset and the corresponding data dictionary are consistent. <span style="color:red">In fact, we indeed found a mismatch: in the dictionary, the column is `application approved_flag`, where `_` is missing, while in the dataset, the column is `application_approved_flag`.</span>
 
 - **Dataset Shape**: (199121, 23)
 - **Number of Columns in Data Dictionary**: 23
@@ -136,6 +140,27 @@ The following table were verified against the data dictionary, as well as incorp
   - Class 0: 176329 (93.07%)
   - Class 1: 13128 (6.93%)
 
+### Redundancy Analysis
+
+From the data profiling table, we can see that the variable `application_approved_flag` is a redundant variable, as it has only one value, which is 1. Therefore, it can be removed from the dataset from the modeling perspective.
+
+### Data Duplication Analysis
+
+During our data quality assessment, we conducted a thorough analysis of record duplication, focusing particularly on multiple loan records for the same borrower (`member_id`):
+
+1. **Overall Duplication Statistics**:
+
+   - Total unique borrowers: 188,124
+   - Borrowers with duplicate records: 1,335
+   - In fact, these 1,335 borrowers' records are completely identical, even for the `id` column.
+
+2. **Deduplication Strategy**:
+   - To prevent data leakage and maintain independence of observations, we kept only one record per borrower
+   - First occurrence was retained, as it represents the earliest loan application
+   - This approach reduced our dataset from 199,121 to 188,123 records
+
+This deduplication process ensures our model training will not be biased by repeated observations of the same borrower, while maintaining the integrity of our risk assessment objectives.
+
 ### Findings
 
 Our preliminary inspection of the dataset as well as its quality shows that overall, the dataset is of good amount and good quality. Specifically:
@@ -144,17 +169,19 @@ Our preliminary inspection of the dataset as well as its quality shows that over
 
 2. **Label Imbalance**: The dataset exhibits some label imbalance, with 93.07% of the instances classified as Class 0 (not bad loans) and 6.93% as Class 1 (bad loans). While this imbalance is present, it is not excessively skewed, allowing for potential modeling strategies to address the imbalance effectively.
 
-3. **Missingness**: Overall, the dataset has an acceptable level of missing values. However, two variables, `mths_since_last_major_derog` and `desc`, have significant missingness, which may require special attention during the modeling process to ensure robust predictions.
+3. **Missingness**: Overall, the dataset has an acceptable level of missing values. However, two variables, `mths_since_last_major_derog` and `desc`, have significant missingness, which may require special attention during the modeling process to ensure robust predictions. In addition, less than 5% of the records are unlabeled, but since the dataset is large, this is not a big concern. As a best practice, we can simply remove the unlabeled records from the dataset for modeling purposes.
 
 4. **Outliers**: The dataset has outliers in several variables, but: 1. they are not extreme, and 2. we have sufficient data to train the model. Therefore, the outliers may not affect the model's performance too much.
 
 5. **Redundancy**: The variable `application_approved_flag` is a redundant variable, as it has only one value, which is 1. Therefore, it can be removed from the dataset from the modeling perspective.
 
-6. **Potentiality**: The variable `desc` contains a lot of text data, which may be useful for the modeling process. However, it is also a very sparse variable, with only 117,117 non-null values out of 199,121 rows. Anyway, it worths some investigation of how to leverage it in the modeling process.
+6. **Duplication**: The dataset has a few duplicated records, but they are not severe enough to affect the model's performance, and easy to handle.
+
+7. **Potentiality**: The variable `desc` contains a lot of text data, which may be useful for the modeling process. However, it is also a very sparse variable, with only 117,117 non-null values out of 199,121 rows. Anyway, it worths some investigation of how to leverage it in the modeling process.
 
 ## Data Exploratory Analysis
 
-This section aims to explore the dataset to uncover key patterns in the loan data. We conduct univariate analysis, variable importance analysis, and predictors inter-correlations and their correlations with the target variable.
+This section aims to explore the dataset to uncover key patterns in the loan data. We conduct univariate analysis, variable importance analysis, and predictors inter-correlations and their correlations with the target variable. Leveraging the findings from data inspection and quality control, this EDA is conducted on the cleaned (`bad_flag` missingness, duplicates and redundant predictor `application_approved_flag` are handled) dataset, which has 188,123 records. Also, `id`, `member_id`, `application_approved_flag` are excluded from the analysis. We will return to `desc` for feature engineering and modeling later.
 
 ### Univariate Analysis
 

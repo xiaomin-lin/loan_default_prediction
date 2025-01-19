@@ -10,6 +10,10 @@ __pycache__/
 .Python
 *.so
 
+.env                # Environment variables file
+.DS_Store           # macOS system files
+data/               # data directory
+
 # Virtual Environment
 .venv/
 venv/
@@ -36,6 +40,9 @@ build/
 # Project-specific
 data/*.csv
 
-.env                # Environment variables file
-.DS_Store           # macOS system files
-data/               # data directory
+# Model artifacts
+models/trained/**/*.pkl
+models/trained/**/*.joblib
+models/trained/**/*.bin
+data/processed/*.pkl
+
