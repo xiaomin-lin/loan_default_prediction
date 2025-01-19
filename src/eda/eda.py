@@ -8,8 +8,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from src.eda.data_inspection import load_data, transform_data
-from src.eda.data_quality import clean_dataset
-from src.utils.data_utils import get_variable_types
+from src.utils.data_utils import clean_data, get_variable_types
 from src.utils.file_utils import create_output_dirs
 from src.utils.stats_utils import (
     calculate_correlations_with_target,
@@ -39,9 +38,16 @@ def run_eda(
     # Load and prepare data
     df, _ = load_data()
     df_transformed = transform_data(df)
-    df_clean, cleaning_stats = clean_dataset(
-        df_transformed, target_col=target_col, excluded_cols=excluded_cols
+
+    df_clean, cleaning_stats = clean_data(
+        df=df_transformed,
+        id_col="member_id",
+        target_col=target_col,
+        excluded_cols=excluded_cols,
+        dedup_strategy="first",
+        verbose=True,
     )
+
     print(f"Excluding columns from analysis: {excluded_cols}")
 
     # Print df_clean head and shape
