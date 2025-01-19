@@ -44,4 +44,5 @@ data/*.csv
 models/trained/**/*.pkl
 models/trained/**/*.joblib
 models/trained/**/*.bin
+data/processed/*.pkl
 
