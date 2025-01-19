@@ -205,29 +205,15 @@ We employed Information Value (IV) and Weight of Evidence (WOE) analysis to asse
 
 Typically, IV values are interpreted as:
 
-- < 0.02: Unpredictive
-- 0.02 to 0.1: Weak
-- 0.1 to 0.3: Medium
-- \> 0.3: Strong
+- < 0.02: Weak or Unpredictive
+- 0.02 to 0.1: Medium or Moderate
+- 0.1 to 0.3: High or Strong
+- \> 0.3: Very Strong
 
-The Information Value (IV) analysis in [Appendix/Variable Importance Plot](#variable-importance-plot) reveals the predictive power of features for loan default:
+The Information Value (IV) analysis in [Appendix/Variable Importance Plot](#variable-importance-plot) reveals the predictive power of features for loan default. We can see that:
 
-1. **High Importance** (IV > 0.3):
-
-   - `loan_amnt` (IV ≈ 0.5): Strongest predictor
-   - `int_rate` (IV ≈ 0.3): Second most important feature
-
-2. **Moderate Importance** (0.05 < IV < 0.1):
-
-   - Application characteristics: `purpose`, `mths_since_recent_inq`, `inq_last_6mths`
-   - Financial metrics: `annual_inc`, `total_bc_limit`, `tot_hi_cred_lim`
-   - Credit utilization: `bc_util`, `percent_bc_gt_75`, `tot_cur_bal`
-
-3. **Lower Importance** (IV < 0.05):
-   - `home_ownership`, `revol_util`, `dti`, `term`
-   - `emp_length`, `internal_score`, `mths_since_last_major_derog`
-
-This analysis suggests that loan amount and pricing factors are the strongest predictors of default risk, while employment and credit history metrics show lower predictive power.
+1. According the IV value implications, there are 13 medium power predictors, 1 strong power predictor, and 1 weak power predictor.
+2. `int_rate` is the strongest predictor of default risk, while credit history metric shows lower predictive power.
 
 ### Inter-predictor Correlation Analysis
 
